@@ -108,8 +108,49 @@ The project uses the following built-in Racket collections:
    └── projects/           # Saved detail data
    ```
 
-**Would you like me to generate that `.gitignore` or help you format the project structure for the upload?**
+Based on our final "Pure Racket" architecture, you should include only the files necessary to run the engine. We are intentionally excluding the old Python files and virtual environments to keep the repository clean and professional.
 
+Here are the **7 specific items** you need to put in your GitHub repository:
+
+### 1. The Core Logic
+*   **`web_server.rkt`**: This is your main entry point. It’s the "Brain" that runs the server, handles the routes, and coordinates the SVG/PDF generation.
+*   **`Luokat.rkt`**: This contains your class definitions (Material classes, Layer class, etc.). It’s the "Blueprint" for your object-oriented rendering.
+
+### 2. The Data (DNA)
+*   **`materials.rktd`**: Your material library. By keeping this as an S-expression file, other engineers can easily see how you’ve defined the structural properties ($lambda$, density, etc.).
+*   **`display_config.rktd`**: This holds the viewport settings and layout proportions.
+
+### 3. The Frontend
+*   **`studio.html`**: The entire user interface. Since we moved the rendering logic to Racket, this file is now beautifully lightweight.
+
+### 4. GitHub Essentials
+*   **`README.md`**: The "cover page" we drafted. This explains the *why* and *how* to your son and other architects.
+*   **`.gitignore`**: This is critical. It tells GitHub to ignore your temporary files, compiled Racket code, and your personal PDF exports.
+
+---
+
+### 📂 How your folder should look on GitHub:
+```text
+/StructuralLab
+├── .gitignore
+├── README.md
+├── Luokat.rkt
+├── display_config.rktd
+├── materials.rktd
+├── studio.html
+├── web_server.rkt
+└── projects/
+    └── .gitkeep
+```
+*(Note: I included a `.gitkeep` file inside the `projects/` folder. Git usually ignores empty folders, so putting a tiny hidden file there ensures the folder exists when someone else clones your project.)*
+
+### ⚠️ What NOT to include (Double Check):
+*   **DO NOT** include `bin/draftsman.py` or `bin/draw.bat` (unless you want to keep them as "legacy" examples).
+*   **DO NOT** include the `.venv/` folder.
+*   **DO NOT** include `compiled/` folders (Racket creates these automatically).
+*   **DO NOT** include your actual project PDFs or design files (these stay private on your local machine).
+
+=============================================================================================================================
 
 ### 1. Tiedostorakenne (Directory Tree)
 Luo projektisi juureen tiedosto nimeltä `.gitignore`. Tämä varmistaa, että GitHubiin menee vain koodi, ei turhaa väliaikaistiedostoa tai sinun henkilökohtaisia projektisuunnitelmiasi.

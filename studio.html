@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StructuralLab Studio M9</title>
+    <style>
+        /* 1. ULKOASU JA ASSETTELU */
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; font-family: 'Segoe UI', sans-serif; 
+            display: flex; height: 100vh; width: 100vw;
+            background: #f0f0f0; overflow: hidden; 
+        }
+
+        #design-pane { flex: 1; padding: 15px; display: flex; flex-direction: column; min-width: 0; }
+        .group-box { 
+            flex: 1; border: 1px solid #999; background: white; 
+            position: relative; display: flex; align-items: center; justify-content: center; 
+            overflow: auto;
+        }
+        .label { 
+            position: absolute; top: -10px; left: 10px; background: #f0f0f0; 
+            padding: 0 5px; font-weight: bold; font-size: 0.85em; z-index: 10;
+        }
+
+        #sidebar { 
+            width: 420px; padding: 15px; border-left: 1px solid #ccc; 
+            display: flex; flex-direction: column; gap: 15px; background: #eee;
+        }
+
+        .panel { 
+            border: 1px solid #999; background: white; 
+            display: flex; flex-direction: column; position: relative; padding-top: 10px;
+        }
+
+        #docs-pane { height: 380px; flex-shrink: 0; }
+        #project-manager { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+        /* VÄLILEHDET */
+        .tabs { display: flex; background: #ddd; border-bottom: 1px solid #999; flex-shrink: 0; }
+        .tab { flex: 1; text-align: center; padding: 8px; cursor: pointer; font-size: 0.8em; border-right: 1px solid #ccc; }
+        .tab.active { background: white; border-bottom: 2px solid #0078d4; font-weight: bold; }
+        
+        .tab-content { flex: 1; display: none; padding: 10px; flex-direction: column; overflow: hidden; }
+        .tab-content.active { display: flex; }
+        
+        textarea { width: 100%; border: 1px solid #ccc; font-family: 'Consolas', monospace; font-size: 13px; padding: 8px; resize: none; flex: 1; }
+
+        /* PROJEKTILISTA */
+        #project-list { 
+            flex: 1; overflow-y: auto; padding: 10px; background: white;
+            font-size: 0.85em; line-height: 1.6;
+        }
+
+        /* HUD: Kelluva info */
+        #hud { 
+            position: absolute; bottom: 20px; right: 20px; 
+            background: rgba(255,255,255,0.9); padding: 12px; 
+            border: 1px solid #999; font-family: monospace; font-size: 0.9em; min-width: 180px; 
+            pointer-events: none;
+        }
+        .hud-row { display: flex; justify-content: space-between; gap: 10px; }
+        .hud-val { font-weight: bold; color: #0078d4; }
+
+        .btn-build { width: 100%; padding: 10px; margin-top: 5px; cursor: pointer; background: #28a745; color: white; border: none; font-weight: bold; }
+        .btn-pdf { width: 100%; padding: 10px; margin-top: 5px; cursor: pointer; background: #0078d4; color: white; border: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- VASEN PUOLI: PIIRUSTUS -->
+    <div id="design-pane">
+        <div class="group-box">
+            <span class="label">1. Rakennekuva (SVG)</span>
+            <div id="svg-out"></div>
+            
+            <div id="hud">
+                <div class="hud-row"><span>PROJEKTI:</span> <span id="h-pid" class="hud-val">--</span></div>
+                <div class="hud-row"><span>DETALI:</span> <span id="h-did" class="hud-val">--</span></div>
+                <hr>
+                <div class="hud-row"><span>KORKEUS:</span> <span><span id="h-val" class="hud-val">0</span> mm</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OIKEA PUOLI: SIDEBAR -->
+    <div id="sidebar">
+        <!-- PANEELI 2: EDITORIT -->
+        <div id="docs-pane" class="panel">
+            <span class="label">2. Suunnittelu</span>
+            <div class="tabs">
+                <div id="btn-ai" class="tab active" onclick="setTab('ai')">Määrittely</div>
+                <div id="btn-proj" class="tab" onclick="setTab('proj')">Tiedot</div>
+            </div>
+            
+            <div id="ai" class="tab-content active">
+                <textarea id="inp" placeholder="esim: betoni 200"></textarea>
+                <button class="btn-build" onclick="updateView()">PÄIVITÄ NÄKYMÄ</button>
+            </div>
+            
+            <div id="proj" class="tab-content">
+                <div style="font-size: 0.8em; margin-bottom:10px;">
+                    Projekti nro: <input id="pid" value="P-101" style="width:100%"><br><br>
+                    Detali nro: <input id="did" value="D-01" style="width:100%">
+                </div>
+                <button class="btn-pdf" onclick="saveAndPDF()">TALLENNA & PDF</button>
+            </div>
+        </div>
+
+        <!-- PANEELI 3: PROJEKTITIEDOSTOT -->
+        <div id="project-manager" class="panel">
+            <span class="label">3. Projektitiedostot</span>
+            <div id="project-list">Ladataan projekteja...</div>
+            <button onclick="refreshList()" style="margin:5px; font-size:0.7em; cursor:pointer;">Päivitä lista</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIIKKA: VÄLILEHDET ---
+        function setTab(t) { 
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active')); 
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); 
+            document.getElementById('btn-' + t).classList.add('active'); 
+            document.getElementById(t).classList.add('active'); 
+        }
+
+        // --- LOGIIKKA: PIIRTÄMINEN ---
+        async function updateView() {
+            const txt = document.getElementById('inp').value;
+            const pid = document.getElementById('pid').value;
+            const did = document.getElementById('did').value;
+            
+            try {
+                const res = await fetch(`/get-svg?txt=${encodeURIComponent(txt)}&id=${pid}&did=${did}`);
+                document.getElementById('svg-out').innerHTML = await res.text();
+                document.getElementById('h-pid').innerText = pid;
+                document.getElementById('h-did').innerText = did;
+            } catch(e) { console.error("Yhteysvirhe"); }
+        }
+
+        // --- LOGIIKKA: TALLENNUS JA PDF ---
+        async function saveAndPDF() {
+            const txt = document.getElementById('inp').value;
+            const pid = document.getElementById('pid').value;
+            const did = document.getElementById('did').value;
+            
+            await fetch(`/save-pdf?txt=${encodeURIComponent(txt)}&id=${pid}&did=${did}`);
+            refreshList();
+            alert("Tiedostot tallennettu projektikansioon.");
+        }
+
+        // --- LOGIIKKA: LATAAMINEN LISTALTA ---
+        async function loadDetail(pid, did) {
+            try {
+                const res = await fetch(`/load-design?id=${pid}&did=${did}`);
+                const text = await res.text();
+                document.getElementById('inp').value = text;
+                document.getElementById('pid').value = pid;
+                document.getElementById('did').value = did;
+                updateView();
+            } catch(e) { alert("Virhe ladattaessa."); }
+        }
+
+        // --- LOGIIKKA: TIEDOSTOSALAIN ---
+        async function refreshList() {
+            const listDiv = document.getElementById('project-list');
+            try {
+                const res = await fetch('/list-projects');
+                const projs = await res.json();
+                let html = "";
+                projs.forEach(p => {
+                    html += `<div style="font-weight:bold; margin-top:10px; color:#333;">📁 ${p.name}</div>`;
+                    p.details.forEach(d => {
+                        html += `<div style="margin-left:15px; color:#0078d4; cursor:pointer; padding:2px;" 
+                                      onclick="loadDetail('${p.name}', '${d}')">
+                                      📄 ${d}
+                                 </div>`;
+                    });
+                });
+                listDiv.innerHTML = html || "Ei projekteja.";
+            } catch(e) { listDiv.innerHTML = "Palvelinyhteys poikki."; }
+        }
+
+        // Alustus kun sivu latautuu
+        window.onload = refreshList;
+    </script>
+</body>
+</html>

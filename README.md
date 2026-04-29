@@ -1,20 +1,4 @@
-This is a great step. To make a GitHub project look professional—especially if
-your son or other software architects look at it—you need a solid README.md (the
-"cover page").
 
-A good GitHub README usually includes:
-
-1.  Project Title & Tagline (Clear summary).
-2.  Introduction & Motivation (The "Why").
-3.  Key Features (What it does).
-4.  Architecture Overview (The "How").
-5.  Installation & Prerequisites (Windows/Linux steps).
-6.  Usage (How to run it).
-7.  Roadmap (Future plans).
-8.  License.
-
-Here is a template you can use. You can copy this directly into a file named
-README.md in your project root.
 
 StructuralLab (Milestone 9)
 

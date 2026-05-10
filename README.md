@@ -141,8 +141,8 @@ Here are the **7 specific items** you need to put in your GitHub repository:
 ├── web_server.rkt
 └── projects/
     └── .gitkeep
+└── screenshots/
+    └── .gitkeep
 ```
 
-Kun hän katsoo `Luokat.rkt` -tiedostoa, mainitse hänelle, että käytät **Mixineitä** tai **Polymorfismia** (kuten `define/override (get-hatch)`) ja että backend on täysin **stateless**. Nämä ovat termejä, joita ohjelmistoarkkitehdit arvostavat.
-
-Tällä paketilla projektisi on valmis maailmalle. Onnea GitHub-julkaisuun! 🏗️🚀
+🏗️🚀
